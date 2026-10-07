@@ -195,18 +195,23 @@ namespace NFLSim.Editor
                 return;
             }
 
-            // Blue glove material (URP Lit with Standard fallback).
+            // Red (left) and black (right) glove materials (URP Lit with Standard fallback).
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var gloveMat = new Material(shader);
-            gloveMat.name = "BlueGlove";
-            gloveMat.color = new Color(0.12f, 0.32f, 0.95f); // vivid blue
-            if (gloveMat.HasProperty("_Metallic")) gloveMat.SetFloat("_Metallic", 0.1f);
-            if (gloveMat.HasProperty("_Smoothness")) gloveMat.SetFloat("_Smoothness", 0.6f);
+            var redMat = new Material(shader);
+            redMat.name = "RedGlove";
+            redMat.color = new Color(0.9f, 0.1f, 0.12f); // vivid red
+            if (redMat.HasProperty("_Metallic")) redMat.SetFloat("_Metallic", 0.1f);
+            if (redMat.HasProperty("_Smoothness")) redMat.SetFloat("_Smoothness", 0.6f);
+            var blackMat = new Material(shader);
+            blackMat.name = "BlackGlove";
+            blackMat.color = new Color(0.08f, 0.08f, 0.1f); // near-black
+            if (blackMat.HasProperty("_Metallic")) blackMat.SetFloat("_Metallic", 0.2f);
+            if (blackMat.HasProperty("_Smoothness")) blackMat.SetFloat("_Smoothness", 0.5f);
 
             foreach (Handedness handedness in new[] { Handedness.Left, Handedness.Right })
             {
                 var hvGo = (GameObject)PrefabUtility.InstantiatePrefab(handPrefab, rig);
-                hvGo.name = $"BlueGlove_{handedness}";
+                hvGo.name = $"Glove_{handedness}";
 
                 var skeleton = hvGo.GetComponent<OVRSkeleton>();
                 if (skeleton != null)
@@ -219,14 +224,14 @@ namespace NFLSim.Editor
                         so.ApplyModifiedProperties();
                     }
                 }
-                else Debug.LogWarning($"Redzone: OVRSkeleton missing on BlueGlove_{handedness}.");
+                else Debug.LogWarning($"Redzone: OVRSkeleton missing on Glove_{handedness}.");
 
                 var smr = hvGo.GetComponentInChildren<SkinnedMeshRenderer>();
-                if (smr != null) smr.sharedMaterial = gloveMat;
-                else Debug.LogWarning($"Redzone: no SkinnedMeshRenderer on BlueGlove_{handedness}.");
+                if (smr != null) smr.sharedMaterial = handedness == Handedness.Left ? redMat : blackMat;
+                else Debug.LogWarning($"Redzone: no SkinnedMeshRenderer on Glove_{handedness}.");
             }
 
-            Debug.Log("<b>Redzone:</b> blue glove visuals added (OVRHandPrefab per hand).");
+            Debug.Log("<b>Redzone:</b> red (left) and black (right) glove visuals added.");
         }
 
         static void SetObjectField(Object obj, string field, Object value)
