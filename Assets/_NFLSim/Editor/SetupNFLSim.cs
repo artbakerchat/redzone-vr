@@ -182,6 +182,51 @@ namespace NFLSim.Editor
             }
 
             Debug.Log("<b>Redzone:</b> hand-tracking rig built (OVRCameraRig + HandGrabInteractor per hand).");
+            BuildBlueGloveVisuals(rig.transform);
+        }
+
+        static void BuildBlueGloveVisuals(Transform rig)
+        {
+            var handPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Packages/com.meta.xr.sdk.core/Prefabs/OVRHandPrefab.prefab");
+            if (handPrefab == null)
+            {
+                Debug.LogWarning("Redzone: OVRHandPrefab not found; hands will be invisible.");
+                return;
+            }
+
+            // Blue glove material (URP Lit with Standard fallback).
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var gloveMat = new Material(shader);
+            gloveMat.name = "BlueGlove";
+            gloveMat.color = new Color(0.12f, 0.32f, 0.95f); // vivid blue
+            if (gloveMat.HasProperty("_Metallic")) gloveMat.SetFloat("_Metallic", 0.1f);
+            if (gloveMat.HasProperty("_Smoothness")) gloveMat.SetFloat("_Smoothness", 0.6f);
+
+            foreach (Handedness handedness in new[] { Handedness.Left, Handedness.Right })
+            {
+                var hvGo = (GameObject)PrefabUtility.InstantiatePrefab(handPrefab, rig);
+                hvGo.name = $"BlueGlove_{handedness}";
+
+                var skeleton = hvGo.GetComponent<OVRSkeleton>();
+                if (skeleton != null)
+                {
+                    var so = new SerializedObject(skeleton);
+                    var prop = so.FindProperty("_skeletonType");
+                    if (prop != null)
+                    {
+                        prop.intValue = handedness == Handedness.Left ? 0 : 1; // HandLeft=0, HandRight=1
+                        so.ApplyModifiedProperties();
+                    }
+                }
+                else Debug.LogWarning($"Redzone: OVRSkeleton missing on BlueGlove_{handedness}.");
+
+                var smr = hvGo.GetComponentInChildren<SkinnedMeshRenderer>();
+                if (smr != null) smr.sharedMaterial = gloveMat;
+                else Debug.LogWarning($"Redzone: no SkinnedMeshRenderer on BlueGlove_{handedness}.");
+            }
+
+            Debug.Log("<b>Redzone:</b> blue glove visuals added (OVRHandPrefab per hand).");
         }
 
         static void SetObjectField(Object obj, string field, Object value)
