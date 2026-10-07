@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace NFLSim
@@ -109,7 +110,8 @@ namespace NFLSim
         {
             if (State == BallState.Held && grab.isSelected && grab.interactorsSelecting.Count > 0)
             {
-                Vector3 p = grab.interactorsSelecting[0].attachTransform.position;
+                var interactor = grab.interactorsSelecting[0];
+                Vector3 p = interactor.GetAttachTransform(grab).position;
                 if (bufCount < posBuf.Length) bufCount++;
                 for (int i = posBuf.Length - 1; i > 0; i--)
                 {

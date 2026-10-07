@@ -11,9 +11,8 @@ namespace NFLSim
     /// </summary>
     public class QBController : MonoBehaviour
     {
-        [Header("Input (optional — Space/Tab work without these)")]
+        [Header("Input (optional — Space works without these)")]
         public InputActionReference snapAction;    // A button: confirm play / snap
-        public InputActionReference cyclePlayAction; // B button: cycle play
 
         Camera headCam;
         GameObject spotRing;
@@ -56,17 +55,14 @@ namespace NFLSim
         void OnEnable()
         {
             if (snapAction != null) snapAction.action.performed += OnSnapPerformed;
-            if (cyclePlayAction != null) cyclePlayAction.action.performed += OnCyclePerformed;
         }
 
         void OnDisable()
         {
             if (snapAction != null) snapAction.action.performed -= OnSnapPerformed;
-            if (cyclePlayAction != null) cyclePlayAction.action.performed -= OnCyclePerformed;
         }
 
         void OnSnapPerformed(InputAction.CallbackContext _) => HandleSnapButton();
-        void OnCyclePerformed(InputAction.CallbackContext _) => HandleCycleButton();
 
         void Update()
         {

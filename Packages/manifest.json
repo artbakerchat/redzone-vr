@@ -7,6 +7,19 @@
     "com.meta.xr.sdk.interaction": "207.0.0",
     "com.meta.xr.sdk.platform": "207.0.0",
     "com.unity.inputsystem": "1.11.0",
+    "com.unity.sdk.linux-arm64": "1.1.0",
+    "com.unity.sdk.linux-x86_64": "1.1.0",
+    "com.unity.toolchain.linux-x86_64-linux": "1.1.0",
+    "com.unity.xr.hands": "1.7.2",
+    "com.unity.xr.interaction.toolkit": "3.0.3",
+    "com.unity.xr.management": "4.4.0",
+    "com.unity.xr.openxr": "1.14.0",
+    "com.unity.modules.androidjni": "1.0.0",
+    "com.unity.modules.animation": "1.0.0",
+    "com.unity.modules.assetbundle": "1.0.0",
+    "com.unity.modules.particlesystem": "1.0.0",
+    "com.unity.modules.physics2d": "1.0.0",
+    "com.unity.modules.terrain": "1.0.0"
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
     "com.unity.modules.terrain": "1.0.0",
@@ -24,4 +37,5 @@
       "url": "https://npm.developer.oculus.com"
     }
   ]
+}
 }
