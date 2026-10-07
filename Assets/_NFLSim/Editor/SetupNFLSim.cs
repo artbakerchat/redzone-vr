@@ -3,6 +3,9 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using Oculus.Interaction.HandGrab;
+using Oculus.Interaction.Input;
+using Oculus.Interaction.Input.UnityXR;
+using UpdateModeFlags = Oculus.Interaction.Input.DataSource<Oculus.Interaction.Input.HandDataAsset>.UpdateModeFlags;
 
 namespace NFLSim.Editor
 {
@@ -105,9 +108,106 @@ namespace NFLSim.Editor
                 cam.transform.rotation = Quaternion.identity; // faces +z, downfield
             }
 
+            BuildHandRig(root.transform);
+
             EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"<b>Redzone:</b> experience scene built at {ScenePath}\n" +
-                      "Next: add an XR rig (OVRCameraRig or XR Origin), disable PreviewCamera, press Play.");
+            Debug.Log($"<b>Redzone:</b> experience scene built at {ScenePath} (field, players, ball, hand-tracking rig).");
+        }
+
+        /// <summary>
+        /// Builds the hand-tracking XR rig in code: Meta OVRCameraRig plus, per hand,
+        /// a Unity-XR hand data source feeding an ISDK Hand, wired to a HandGrabInteractor
+        /// instantiated from the SDK prefab. This makes the Football grabbable with bare
+        /// hands — no controllers, no manual Editor rig setup.
+        /// </summary>
+        static void BuildHandRig(Transform parent)
+        {
+            var rigPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Packages/com.meta.xr.sdk.core/Prefabs/OVRCameraRig.prefab");
+            GameObject rig;
+            if (rigPrefab != null)
+            {
+                rig = (GameObject)PrefabUtility.InstantiatePrefab(rigPrefab, parent);
+                rig.name = "OVRCameraRig";
+            }
+            else
+            {
+                Debug.LogWarning("Redzone: OVRCameraRig prefab not found; using fallback camera rig.");
+                rig = new GameObject("XRRig");
+                rig.transform.SetParent(parent, false);
+                var fallbackCam = new GameObject("Camera");
+                fallbackCam.transform.SetParent(rig.transform, false);
+                fallbackCam.tag = "MainCamera";
+                fallbackCam.AddComponent<Camera>();
+            }
+
+            // The desktop preview camera is superseded by the XR rig.
+            var preview = GameObject.Find("PreviewCamera (disable when XR rig is added)");
+            if (preview != null) preview.SetActive(false);
+
+            var cam = rig.GetComponentInChildren<Camera>();
+            if (cam == null)
+            {
+                Debug.LogError("Redzone: no camera in XR rig; hand rig aborted.");
+                return;
+            }
+
+            var transformer = cam.gameObject.AddComponent<TransformTrackingToWorldTransformer>();
+            SetObjectField(transformer, "TrackingSpace", cam.transform);
+
+            var interPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Packages/com.meta.xr.sdk.interaction/Runtime/Prefabs/HandGrab/HandGrabInteractor.prefab");
+            if (interPrefab == null)
+                Debug.LogError("Redzone: HandGrabInteractor prefab not found; hands will not grab.");
+
+            foreach (Handedness handedness in new[] { Handedness.Left, Handedness.Right })
+            {
+                var dsGo = new GameObject($"HandDataSource_{handedness}");
+                dsGo.transform.SetParent(rig.transform, false);
+                var ds = dsGo.AddComponent<FromUnityXRHandDataSource>();
+                SetIntField(ds, "_handedness", (int)handedness);
+                ds.InjectTrackingToWorldTransformer(transformer);
+
+                var handGo = new GameObject($"Hand_{handedness}");
+                handGo.transform.SetParent(rig.transform, false);
+                var hand = handGo.AddComponent<Hand>();
+                hand.InjectAllDataModifier(UpdateModeFlags.UnityUpdate, ds, ds, false);
+
+                if (interPrefab == null) continue;
+                var interGo = (GameObject)PrefabUtility.InstantiatePrefab(interPrefab, rig.transform);
+                interGo.name = $"HandGrabInteractor_{handedness}";
+                var handRef = interGo.GetComponent<HandRef>();
+                if (handRef != null) handRef.InjectHand(hand);
+                else Debug.LogError($"Redzone: HandRef missing on HandGrabInteractor prefab ({handedness}).");
+            }
+
+            Debug.Log("<b>Redzone:</b> hand-tracking rig built (OVRCameraRig + HandGrabInteractor per hand).");
+        }
+
+        static void SetObjectField(Object obj, string field, Object value)
+        {
+            var so = new SerializedObject(obj);
+            var prop = so.FindProperty(field);
+            if (prop == null)
+            {
+                Debug.LogError($"Redzone: field '{field}' not found on {obj.GetType().Name}.");
+                return;
+            }
+            prop.objectReferenceValue = value;
+            so.ApplyModifiedProperties();
+        }
+
+        static void SetIntField(Object obj, string field, int value)
+        {
+            var so = new SerializedObject(obj);
+            var prop = so.FindProperty(field);
+            if (prop == null)
+            {
+                Debug.LogError($"Redzone: field '{field}' not found on {obj.GetType().Name}.");
+                return;
+            }
+            prop.intValue = value;
+            so.ApplyModifiedProperties();
         }
 
         [MenuItem("NFLSim/Apply Quest Build Settings")]
