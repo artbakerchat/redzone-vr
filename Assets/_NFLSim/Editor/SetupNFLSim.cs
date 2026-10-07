@@ -183,6 +183,15 @@ namespace NFLSim.Editor
 
             Debug.Log("<b>Redzone:</b> hand-tracking rig built (OVRCameraRig + HandGrabInteractor per hand).");
             BuildBlueGloveVisuals(rig.transform);
+
+            // Wide Motion Mode: track hands outside the camera view (throwing windup).
+            var ovrManager = rig.GetComponentInChildren<OVRManager>();
+            if (ovrManager != null)
+            {
+                ovrManager.wideMotionModeHandPosesEnabled = true;
+                Debug.Log("<b>Redzone:</b> Wide Motion Mode enabled on OVRManager.");
+            }
+            else Debug.LogWarning("Redzone: OVRManager not found; Wide Motion Mode not enabled.");
         }
 
         static void BuildBlueGloveVisuals(Transform rig)
