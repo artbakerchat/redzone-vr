@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 23
+  productGUID: 7f3a9c2e4b5d4a6f8e1c3b5a7d9e0f12
+  AndroidProfiler: 0
+  AndroidFilterTouchesWhenObscured: 0
+  AndroidEnableSustainedPerformanceMode: 0
+  defaultScreenOrientation: 4
+  targetDevice: 2
+  useOnDemandResources: 0
+  accelerometerFrequency: 60
+  companyName: Marley
+  productName: NFLSim VR
+  defaultCursor: {fileID: 0}
+  cursorHotspot: {x: 0, y: 0}
+  applicationIdentifier:
+    Android: com.artbakerchat.redzonevr
+    Standalone: com.marley.nflsim
+  buildNumber:
+    Android: 0
+    Standalone: 0
+  bundleVersion: 0.1.0
+  preloadedAssets: []
+  metroInputSource: 0
+  scriptingBackend:
+    Android: 1
+    Standalone: 1
+  il2cppCompilerConfiguration:
+    Android: 1
+  managedStrippingLevel:
+    Android: 1
+  androidTargetArchitectures: 2
+  androidMinSdkVersion: 32
+  androidTargetSdkVersion: 0
+  sprintRange: 0
+  defaultIsFullScreen: 1
+  defaultIsNativeResolution: 1
+  runInBackground: 1
+  captureSingleScreen: 0
+  muteOtherAudioSources: 0
+  Prepare IOS For Recording: 0
+  forceSingleInstance: 0
+  resizableWindow: 0
+  useMacAppStoreValidation: 0
+  macRetinaSupport: 1
+  d3d9FullscreenMode: 1
+  d3d11FullscreenMode: 1
+  XVRSettings:
+    enabled: 0
+  vrSupported: 0

@@ -114,12 +114,12 @@ namespace NFLSim.Editor
         {
             PlayerSettings.companyName = "Marley";
             PlayerSettings.productName = "NFLSim VR";
-            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.marley.nflsim");
+            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.artbakerchat.redzonevr");
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel32;
             EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
-            Debug.Log("<b>NFLSim:</b> Quest build settings applied (IL2CPP, ARM64, min SDK 32, com.marley.nflsim).\n" +
+            Debug.Log("<b>NFLSim:</b> Quest build settings applied (IL2CPP, ARM64, min SDK 32, com.artbakerchat.redzonevr).\n" +
                       "Still manual: Project Settings → XR Plug-in Management → Android → check Oculus, " +
                       "then add your Meta XR SDK rig to the scene.");
         }
