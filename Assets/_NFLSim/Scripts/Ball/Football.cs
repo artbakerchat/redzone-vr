@@ -23,6 +23,13 @@ namespace NFLSim
         Rigidbody rb;
         HandGrabInteractable grab;
         TrailRenderer trail;
+        LineRenderer guideLine;
+
+        // Slow-mo aim: while held, time dilates and a guideline shows the
+        // predicted trajectory from the current hand velocity.
+        const float AimTimeScale = 0.25f;
+        const int GuideSteps = 24;
+        const float GuideStepDt = 0.12f;
 
         // Release-velocity tracking: hand positions sampled every frame
         // while held; the throw direction/speed comes from real hand motion.
@@ -40,8 +47,26 @@ namespace NFLSim
             grab.enabled = false;
             if (trail) trail.emitting = false;
 
+            guideLine = gameObject.AddComponent<LineRenderer>();
+            guideLine.positionCount = GuideSteps;
+            guideLine.enabled = false;
+            guideLine.useWorldSpace = true;
+            guideLine.startWidth = 0.03f;
+            guideLine.endWidth = 0.01f;
+            var guideMat = new Material(Shader.Find("Universal Render Pipeline/Unlit")
+                ?? Shader.Find("Standard"));
+            guideMat.color = new Color(0.2f, 0.8f, 1f, 0.85f); // cyan guideline
+            guideLine.material = guideMat;
+
             grab.WhenSelectingInteractorAdded.Action += OnGrabbed;
             grab.WhenSelectingInteractorRemoved.Action += OnReleased;
+        }
+
+        void ResetSlowMo()
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = 0.02f;
+            if (guideLine != null) guideLine.enabled = false;
         }
 
         void OnDestroy()
@@ -60,12 +85,16 @@ namespace NFLSim
                 State = BallState.Held;
                 holdingHand = hand;
                 bufCount = 0;
+                Time.timeScale = AimTimeScale;
+                Time.fixedDeltaTime = 0.02f * AimTimeScale;
+                guideLine.enabled = true;
             }
         }
 
         public void Place(Vector3 spot)
         {
             StopAllCoroutines();
+            ResetSlowMo();
             transform.SetParent(null);
             transform.position = spot;
             transform.rotation = Quaternion.identity;
@@ -104,6 +133,7 @@ namespace NFLSim
         public void HandTo(Transform t)
         {
             StopAllCoroutines();
+            ResetSlowMo();
             State = BallState.Dead;
             rb.isKinematic = true;
             rb.linearVelocity = Vector3.zero;
@@ -120,6 +150,7 @@ namespace NFLSim
         public void Kill()
         {
             StopAllCoroutines();
+            ResetSlowMo();
             State = BallState.Dead;
             rb.isKinematic = true;
             rb.linearVelocity = Vector3.zero;
@@ -142,8 +173,50 @@ namespace NFLSim
                     timeBuf[i] = timeBuf[i - 1];
                 }
                 posBuf[0] = p;
-                timeBuf[0] = Time.time;
+                timeBuf[0] = Time.unscaledTime; // real hand speed, unaffected by slow-mo
+                DrawGuideline();
             }
+        }
+
+        /// <summary>
+        /// Predicts the throw from current hand velocity and draws the arc.
+        /// Uses unscaled time so slow-mo doesn't distort the prediction.
+        /// </summary>
+        void DrawGuideline()
+        {
+            Vector3 v = EstimateHandVelocity();
+            float speed = Mathf.Clamp(v.magnitude * SimConfig.ThrowBoost,
+                SimConfig.MinThrowSpeed, SimConfig.MaxThrowSpeed);
+            Vector3 dir = v.magnitude > 0.5f
+                ? v.normalized
+                : (transform.forward + Vector3.up * 0.4f).normalized;
+            Vector3 vel = dir * speed;
+
+            Vector3 pos = transform.position;
+            Vector3 gravity = Physics.gravity;
+            for (int i = 0; i < GuideSteps; i++)
+            {
+                guideLine.SetPosition(i, pos);
+                vel += gravity * GuideStepDt;
+                pos += vel * GuideStepDt;
+                if (pos.y <= 0.05f) // stop at turf
+                {
+                    pos.y = 0.05f;
+                    for (int j = i + 1; j < GuideSteps; j++) guideLine.SetPosition(j, pos);
+                    break;
+                }
+            }
+        }
+
+        Vector3 EstimateHandVelocity()
+        {
+            if (bufCount >= 2)
+            {
+                int last = Mathf.Min(bufCount - 1, posBuf.Length - 1);
+                float dt = Mathf.Max(timeBuf[0] - timeBuf[last], 0.016f);
+                return (posBuf[0] - posBuf[last]) / dt;
+            }
+            return transform.forward * 8f;
         }
 
         void OnReleased(HandGrabInteractor hand)
@@ -151,17 +224,12 @@ namespace NFLSim
             if (State != BallState.Held) return;
             holdingHand = null;
 
-            Vector3 v;
-            if (bufCount >= 2)
-            {
-                int last = Mathf.Min(bufCount - 1, posBuf.Length - 1);
-                float dt = Mathf.Max(timeBuf[0] - timeBuf[last], 0.016f);
-                v = (posBuf[0] - posBuf[last]) / dt;
-            }
-            else
-            {
-                v = transform.forward * 8f; // dropped without motion: gentle lob forward
-            }
+            // Restore full speed before measuring the throw.
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = 0.02f;
+            guideLine.enabled = false;
+
+            Vector3 v = EstimateHandVelocity();
 
             float speed = Mathf.Clamp(v.magnitude * SimConfig.ThrowBoost,
                 SimConfig.MinThrowSpeed, SimConfig.MaxThrowSpeed);
