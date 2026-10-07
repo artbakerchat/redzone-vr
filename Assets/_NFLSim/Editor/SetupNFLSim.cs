@@ -202,11 +202,11 @@ namespace NFLSim.Editor
             redMat.color = new Color(0.9f, 0.1f, 0.12f); // vivid red
             if (redMat.HasProperty("_Metallic")) redMat.SetFloat("_Metallic", 0.1f);
             if (redMat.HasProperty("_Smoothness")) redMat.SetFloat("_Smoothness", 0.6f);
-            var blackMat = new Material(shader);
-            blackMat.name = "BlackGlove";
-            blackMat.color = new Color(0.08f, 0.08f, 0.1f); // near-black
-            if (blackMat.HasProperty("_Metallic")) blackMat.SetFloat("_Metallic", 0.2f);
-            if (blackMat.HasProperty("_Smoothness")) blackMat.SetFloat("_Smoothness", 0.5f);
+            var blueMat = new Material(shader);
+            blueMat.name = "BlueGlove";
+            blueMat.color = new Color(0.12f, 0.32f, 0.95f); // vivid blue
+            if (blueMat.HasProperty("_Metallic")) blueMat.SetFloat("_Metallic", 0.1f);
+            if (blueMat.HasProperty("_Smoothness")) blueMat.SetFloat("_Smoothness", 0.6f);
 
             foreach (Handedness handedness in new[] { Handedness.Left, Handedness.Right })
             {
@@ -227,11 +227,11 @@ namespace NFLSim.Editor
                 else Debug.LogWarning($"Redzone: OVRSkeleton missing on Glove_{handedness}.");
 
                 var smr = hvGo.GetComponentInChildren<SkinnedMeshRenderer>();
-                if (smr != null) smr.sharedMaterial = handedness == Handedness.Left ? redMat : blackMat;
+                if (smr != null) smr.sharedMaterial = handedness == Handedness.Left ? redMat : blueMat;
                 else Debug.LogWarning($"Redzone: no SkinnedMeshRenderer on Glove_{handedness}.");
             }
 
-            Debug.Log("<b>Redzone:</b> red (left) and black (right) glove visuals added.");
+            Debug.Log("<b>Redzone:</b> red (left) and blue (right) glove visuals added.");
         }
 
         static void SetObjectField(Object obj, string field, Object value)
