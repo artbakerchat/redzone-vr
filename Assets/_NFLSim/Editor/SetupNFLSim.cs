@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using Oculus.Interaction.HandGrab;
 
 namespace NFLSim.Editor
 {
@@ -63,7 +63,8 @@ namespace NFLSim.Editor
             col.radius = 0.16f;
             var rb = ballGo.AddComponent<Rigidbody>();
             rb.isKinematic = true;
-            ballGo.AddComponent<XRGrabInteractable>();
+            var handGrab = ballGo.AddComponent<HandGrabInteractable>();
+            handGrab.InjectRigidbody(rb);
             var trail = ballGo.AddComponent<TrailRenderer>();
             trail.time = 0.35f;
             trail.startWidth = 0.05f;

@@ -1,17 +1,18 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using Oculus.Interaction.HandGrab;
 
 namespace NFLSim
 {
     /// <summary>
-    /// The football. Grab it with the controller and throw — release velocity is
-    /// measured from your real hand motion. While flying it spiral-stabilizes,
-    /// then resolves catches, picks, turf and bounds by radius checks.
+    /// The football. Grab it with your tracked hand and throw — release
+    /// velocity is measured from your real hand motion. While flying it
+    /// spiral-stabilizes, then resolves catches, picks, turf and bounds by
+    /// radius checks. Hands-first: uses the Meta Interaction SDK's
+    /// HandGrabInteractable, no controllers.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
-    [RequireComponent(typeof(XRGrabInteractable))]
+    [RequireComponent(typeof(HandGrabInteractable))]
     [RequireComponent(typeof(SphereCollider))]
     public class Football : MonoBehaviour
     {
@@ -20,27 +21,46 @@ namespace NFLSim
         public bool Thrown { get; private set; }
 
         Rigidbody rb;
-        XRGrabInteractable grab;
+        HandGrabInteractable grab;
         TrailRenderer trail;
 
+        // Release-velocity tracking: hand positions sampled every frame
+        // while held; the throw direction/speed comes from real hand motion.
         readonly Vector3[] posBuf = new Vector3[12];
         readonly float[] timeBuf = new float[12];
         int bufCount;
+        HandGrabInteractor holdingHand;
 
         void Awake()
         {
             rb = GetComponent<Rigidbody>();
-            grab = GetComponent<XRGrabInteractable>();
+            grab = GetComponent<HandGrabInteractable>();
             trail = GetComponent<TrailRenderer>();
             rb.isKinematic = true;
             grab.enabled = false;
             if (trail) trail.emitting = false;
 
-            grab.selectEntered.AddListener(_ =>
+            grab.WhenSelectingInteractorAdded.Action += OnGrabbed;
+            grab.WhenSelectingInteractorRemoved.Action += OnReleased;
+        }
+
+        void OnDestroy()
+        {
+            if (grab != null)
             {
-                if (State == BallState.InHands) State = BallState.Held;
-            });
-            grab.selectExited.AddListener(OnReleased);
+                grab.WhenSelectingInteractorAdded.Action -= OnGrabbed;
+                grab.WhenSelectingInteractorRemoved.Action -= OnReleased;
+            }
+        }
+
+        void OnGrabbed(HandGrabInteractor hand)
+        {
+            if (State == BallState.InHands)
+            {
+                State = BallState.Held;
+                holdingHand = hand;
+                bufCount = 0;
+            }
         }
 
         public void Place(Vector3 spot)
@@ -54,6 +74,7 @@ namespace NFLSim
             rb.angularVelocity = Vector3.zero;
             grab.enabled = false;
             Thrown = false;
+            holdingHand = null;
             bufCount = 0;
             if (trail) { trail.emitting = false; trail.Clear(); }
             State = BallState.Placed;
@@ -89,6 +110,7 @@ namespace NFLSim
             rb.angularVelocity = Vector3.zero;
             grab.enabled = false;
             Thrown = false;
+            holdingHand = null;
             if (trail) { trail.emitting = false; trail.Clear(); }
             transform.SetParent(t);
             transform.localPosition = Vector3.zero;
@@ -103,15 +125,16 @@ namespace NFLSim
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             grab.enabled = false;
+            Thrown = false;
+            holdingHand = null;
             if (trail) trail.emitting = false;
         }
 
         void Update()
         {
-            if (State == BallState.Held && grab.isSelected && grab.interactorsSelecting.Count > 0)
+            if (State == BallState.Held && holdingHand != null)
             {
-                var interactor = grab.interactorsSelecting[0];
-                Vector3 p = interactor.GetAttachTransform(grab).position;
+                Vector3 p = holdingHand.transform.position;
                 if (bufCount < posBuf.Length) bufCount++;
                 for (int i = posBuf.Length - 1; i > 0; i--)
                 {
@@ -123,9 +146,10 @@ namespace NFLSim
             }
         }
 
-        void OnReleased(SelectExitEventArgs _)
+        void OnReleased(HandGrabInteractor hand)
         {
             if (State != BallState.Held) return;
+            holdingHand = null;
 
             Vector3 v;
             if (bufCount >= 2)
