@@ -275,8 +275,8 @@ namespace NFLSim.Editor
         {
             PlayerSettings.companyName = "Marley";
             PlayerSettings.productName = "NFLSim VR";
-            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.artbakerchat.redzonevr");
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, "com.artbakerchat.redzonevr");
+            PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel32;
             EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
