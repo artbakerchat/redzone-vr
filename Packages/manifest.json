@@ -46,7 +46,8 @@
     "com.unity.xr.hands": "1.7.2",
     "com.unity.xr.interaction.toolkit": "3.0.3",
     "com.unity.xr.management": "4.4.0",
-    "com.unity.xr.openxr": "1.14.0"
+    "com.unity.xr.openxr": "1.14.0",
+    "com.unity.pipeline": "0.8.0-exp.1"
   },
   "scopedRegistries": [
     {

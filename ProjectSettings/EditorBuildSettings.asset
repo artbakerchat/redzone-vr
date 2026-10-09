@@ -4,7 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/_NFLSim/GreyViews/Scenes/Grey_Formation3v3.unity
+    guid: a2ef7ce602bad8a78998b8f2ac2abf62
   m_configObjects:
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: e5667fd680b451621bbf40df139e54de, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: ae541945ff370673a8524be2f396298d, type: 2}
   m_UseUCBPForAssetBundles: 0

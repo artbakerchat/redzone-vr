@@ -15,7 +15,18 @@ namespace NFLSim
         public Color grass = new Color(0.13f, 0.42f, 0.18f);
         public Color lineWhite = new Color(0.95f, 0.95f, 0.95f);
 
-        void Awake() => Build();
+        /// <summary>
+        /// Grey clay-render mode (used by the GreyViews builder). When true via
+        /// BuildGrey(), every material is a neutral grey instead of team colors.
+        /// </summary>
+        public static bool SuppressAutoBuild = false;
+        bool useGrey = false;
+
+        void Awake() { if (!SuppressAutoBuild) Build(); }
+
+        public void BuildGrey() { useGrey = true; Build(); }
+
+        static Color Grey(float v) => new Color(v, v, v);
 
         static Material Mat(Color c)
         {
@@ -31,11 +42,11 @@ namespace NFLSim
             float W = SimConfig.FieldWidthYards * U;
             float zc = 60f * U; // field center (0..120 yd)
 
-            var grassMat = Mat(grass);
-            var whiteMat = Mat(lineWhite);
-            var darkMat = Mat(new Color(0.05f, 0.06f, 0.08f));
-            var homeMat = Mat(homePrimary);
-            var yellowMat = Mat(new Color(1f, 0.85f, 0.1f));
+            var grassMat = Mat(useGrey ? Grey(0.58f) : grass);
+            var whiteMat = Mat(useGrey ? Grey(0.85f) : lineWhite);
+            var darkMat = Mat(useGrey ? Grey(0.50f) : new Color(0.05f, 0.06f, 0.08f));
+            var homeMat = Mat(useGrey ? Grey(0.42f) : homePrimary);
+            var yellowMat = Mat(useGrey ? Grey(0.62f) : new Color(1f, 0.85f, 0.1f));
 
             // surrounding ground
             var surround = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -57,8 +68,9 @@ namespace NFLSim
             Box(10f * U, 0.02f, W, new Vector3(0f, 0.005f, 5f * U), homeMat);
             Box(10f * U, 0.02f, W, new Vector3(0f, 0.005f, 115f * U), homeMat);
             // accent strips at the goal lines
-            Box(0.3f * U, 0.03f, W, new Vector3(0f, 0.008f, 10f * U), Mat(homeAccent));
-            Box(0.3f * U, 0.03f, W, new Vector3(0f, 0.008f, 110f * U), Mat(homeAccent));
+            var accentMat = Mat(useGrey ? Grey(0.70f) : homeAccent);
+            Box(0.3f * U, 0.03f, W, new Vector3(0f, 0.008f, 10f * U), accentMat);
+            Box(0.3f * U, 0.03f, W, new Vector3(0f, 0.008f, 110f * U), accentMat);
 
             // yard lines every yard, heavier every 5
             for (int i = 0; i <= 100; i++)
